@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d10">
+  <meta name="description" content="NOVA TASKS — a calm, focused workspace for your work and ideas.">
+  <title>NOVA TASKS — Your workspace</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d10;
+      --sidebar: #11141a;
+      --surface: #171b22;
+      --surface-2: #1d222b;
+      --surface-3: #242a34;
+      --text: #f4f4f5;
+      --muted: #9299a5;
+      --muted-2: #69717e;
+      --accent: #c7a66a;
+      --accent-soft: rgba(199, 166, 106, .13);
+      --border: rgba(255,255,255,.075);
+      --success: #4caf85;
+      --warning: #d9a441;
+      --danger: #e16b6b;
+      --blue: #7d9de2;
+      --shadow: 0 18px 50px rgba(0,0,0,.24);
+      --radius: 14px;
+    }
+    [data-theme="light"] {
+      color-scheme: light;
+      --bg: #f4f5f7;
+      --sidebar: #fff;
+      --surface: #fff;
+      --surface-2: #f5f6f8;
+      --surface-3: #eceef2;
+      --text: #1d222b;
+      --muted: #727b88;
+      --muted-2: #9098a4;
+      --accent: #987338;
+      --accent-soft: rgba(152,115,56,.12);
+      --border: rgba(20,27,38,.09);
+      --shadow: 0 18px 50px rgba(25,34,48,.09);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--bg); color: var(--text); font: 14px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    button, input, select, textarea { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [contenteditable]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    button:disabled { opacity: .48; cursor: not-allowed; }
+    .app { display: grid; grid-template-columns: 248px minmax(0,1fr) 292px; min-height: 100vh; max-width: 1800px; margin: auto; }
+    .sidebar { display: flex; flex-direction: column; min-height: 100vh; padding: 22px 14px 14px; background: var(--sidebar); border-right: 1px solid var(--border); position: sticky; top: 0; height: 100vh; overflow-y: auto; z-index: 20; transition: transform .24s ease; }
+    .brand { display:flex; align-items:center; gap:11px; padding: 0 9px 24px; }
+    .brand-mark { width:32px; height:32px; display:grid; place-items:center; border-radius:10px; background:var(--accent); color:#17130d; font-weight:850; letter-spacing:-2px; font-size:17px; }
+    .brand-name { font-weight:750; font-size:13px; letter-spacing:1.55px; }
+    .brand-caption { color:var(--muted); font-size:10px; letter-spacing:.4px; margin-top:1px; }
+    .workspace-switch { display:flex; align-items:center; gap:10px; width:100%; padding:10px; border:1px solid var(--border); border-radius:11px; background:var(--surface); text-align:left; cursor:pointer; }
+    .workspace-avatar { width:27px;height:27px;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:750;font-size:11px; }
+    .workspace-name { flex:1; font-weight:600; font-size:12px; }
+    .workspace-label { color:var(--muted); font-size:10px; }
+    .nav-section-label { padding:22px 10px 8px; color:var(--muted-2); font-size:10px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; }
+    .nav-list { display:grid; gap:3px; }
+    .nav-item { width:100%; display:flex; align-items:center; gap:11px; padding:9px 10px; color:var(--muted); border:0; border-radius:9px; background:transparent; text-align:left; cursor:pointer; transition:.16s ease; }
+    .nav-item:hover { color:var(--text); background:var(--surface-2); }
+    .nav-item.active { color:var(--text); background:var(--surface-2); font-weight:620; }
+    .nav-item.active .nav-icon { color:var(--accent); }
+    .nav-icon { width:17px; height:17px; display:grid; place-items:center; color:var(--muted); }
+    .nav-icon svg, .icon svg { width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+    .nav-count { margin-left:auto; color:var(--muted-2); font-size:11px; }
+    .nav-spacer { flex:1; min-height:24px; }
+    .sidebar-bottom { border-top:1px solid var(--border); padding-top:12px; }
+    .user-row { display:flex; align-items:center; gap:10px; padding:14px 8px 4px; }
+    .avatar { width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#394354;color:#e3e8f1;font-weight:650;font-size:11px; flex:none; }
+    .user-copy { flex:1; min-width:0; }
+    .user-copy strong { display:block; font-size:12px; font-weight:620; }
+    .user-copy span { display:block; color:var(--muted); font-size:10px; }
+    .main { min-width:0; padding:0 34px 42px; }
+    .topbar { height:76px; display:flex; align-items:center; gap:14px; border-bottom:1px solid var(--border); }
+    .mobile-menu { display:none !important; }
+    .breadcrumb { color:var(--muted); font-size:12px; white-space:nowrap; }
+    .breadcrumb strong { color:var(--text); font-weight:600; }
+    .top-spacer { flex:1; }
+    .search-wrap { position:relative; width:min(240px, 30vw); }
+    .search-wrap input { width:100%; padding:9px 34px 9px 35px; border:1px solid var(--border); border-radius:9px; background:var(--surface); color:var(--text); font-size:12px; }
+    .search-wrap .search-icon { position:absolute; left:11px; top:10px; color:var(--muted); }
+    .search-wrap kbd { position:absolute; right:9px; top:9px; padding:1px 5px; border:1px solid var(--border); border-radius:4px; color:var(--muted); font-size:10px; }
+    .icon-button { width:36px;height:36px; display:grid;place-items:center; position:relative; border:1px solid var(--border); border-radius:9px; background:var(--surface); color:var(--muted); cursor:pointer; }
+    .icon-button:hover { color:var(--text); border-color:rgba(199,166,106,.4); }
+    .icon-button .icon svg { width:16px;height:16px; }
+    .unread-dot { position:absolute; width:7px;height:7px; top:7px;right:7px; border-radius:50%; background:var(--accent); border:1px solid var(--surface); }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:9px 13px; border:1px solid var(--border); border-radius:9px; background:var(--surface); color:var(--text); font-size:12px; font-weight:620; cursor:pointer; transition:transform .15s ease, background .15s ease, border-color .15s ease; }
+    .btn:hover { transform:translateY(-1px); border-color:rgba(199,166,106,.42); }
+    .btn-primary { background:var(--accent); border-color:var(--accent); color:#17130d; }
+    .btn-primary:hover { background:#d3b77f; border-color:#d3b77f; }
+    .btn-quiet { background:transparent; }
+    .btn-danger { color:var(--danger); }
+    .btn-small { padding:6px 9px; font-size:11px; }
+    .page { padding-top:27px; animation:appear .24s ease; }
+    @keyframes appear { from { opacity:.5; transform:translateY(4px); } to { opacity:1; transform:none; } }
+    .page-head { display:flex; align-items:flex-start; gap:18px; margin:0 0 24px; }
+    .page-head-copy { flex:1; }
+    .eyebrow { color:var(--accent); font-size:10px; font-weight:700; letter-spacing:1.15px; text-transform:uppercase; }
+    h1 { margin:5px 0 5px; font-size:27px; line-height:1.2; letter-spacing:-.7px; font-weight:680; }
+    .page-subtitle { margin:0; color:var(--muted); font-size:12px; }
+    .head-actions { display:flex; align-items:center; gap:8px; }
+    .demo-banner { display:flex;align-items:center;gap:10px; margin:0 0 20px; padding:10px 13px; background:var(--accent-soft); border:1px solid rgba(199,166,106,.19); border-radius:10px; color:var(--muted); font-size:11px; }
+    .demo-banner strong { color:var(--accent); font-size:10px; letter-spacing:.7px; }
+    .demo-banner span { flex:1; }
+    .demo-banner button { border:0;background:none;color:var(--accent);font-size:11px;font-weight:650;cursor:pointer; }
+    .stats-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:13px; }
+    .card { min-width:0; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); }
+    .stat-card { padding:16px; }
+    .stat-top { display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:11px; }
+    .stat-icon { width:29px;height:29px;display:grid;place-items:center;border-radius:9px;background:var(--surface-2);color:var(--accent); }
+    .stat-icon svg { width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7; }
+    .stat-value { margin:12px 0 3px; font-size:26px; letter-spacing:-.7px; font-weight:680; }
+    .stat-foot { color:var(--muted-2);font-size:10px; }
+    .stat-foot .positive { color:var(--success); }
+    .dashboard-grid { display:grid;grid-template-columns:minmax(0,1.35fr) minmax(230px,.8fr); gap:14px; margin-top:14px; }
+    .panel { padding:17px; }
+    .panel-head { display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px; }
+    .panel-head h2, .section-title { margin:0;font-size:13px;font-weight:650; }
+    .panel-head p { margin:3px 0 0;color:var(--muted);font-size:10px; }
+    .text-link { border:0;background:none;color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap; }
+    .chart { height:162px;display:flex;align-items:flex-end;justify-content:space-around;gap:10px;padding:12px 4px 0;border-bottom:1px solid var(--border); background:repeating-linear-gradient(to bottom,transparent 0,transparent 39px,var(--border) 40px); }
+    .chart-day { height:100%;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px; }
+    .chart-bars { height:122px;display:flex;align-items:flex-end;gap:4px; }
+    .chart-bar { width:10px;min-height:4px;border-radius:4px 4px 1px 1px;background:var(--accent);opacity:.83; }
+    .chart-bar.muted { background:var(--surface-3);opacity:1; }
+    .chart-day-label { padding-bottom:7px;color:var(--muted);font-size:9px; }
+    .priority-stack { display:grid;gap:14px;padding-top:5px; }
+    .priority-line { display:grid;grid-template-columns:58px 1fr 18px;align-items:center;gap:8px;color:var(--muted);font-size:10px; }
+    .progress-track { height:5px;overflow:hidden;border-radius:5px;background:var(--surface-3); }
+    .progress-fill { height:100%;border-radius:5px;background:var(--accent); }
+    .priority-line strong { color:var(--text);font-size:10px;font-weight:600;text-align:right; }
+    .below-grid { display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px; }
+    .task-list { display:grid; }
+    .task-row { display:flex;align-items:center;gap:10px;min-width:0;padding:12px 0;border-bottom:1px solid var(--border); }
+    .task-row:last-child { border-bottom:0;padding-bottom:0; }
+    .task-check { width:16px;height:16px;flex:none;accent-color:var(--accent);cursor:pointer; }
+    .task-main { flex:1;min-width:0;cursor:pointer; }
+    .task-title { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:570; }
+    .task-title.done { color:var(--muted);text-decoration:line-through; }
+    .task-meta { display:flex;align-items:center;gap:7px;margin-top:3px;color:var(--muted);font-size:9px; }
+    .priority-dot { width:6px;height:6px;border-radius:50%;background:var(--warning); }
+    .priority-dot.high,.priority-dot.urgent { background:var(--danger); }
+    .priority-dot.low { background:var(--success); }
+    .priority-dot.medium { background:var(--warning); }
+    .status-pill, .tag { display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:6px;background:var(--surface-2);color:var(--muted);font-size:9px;white-space:nowrap; }
+    .status-pill::before { content:"";width:5px;height:5px;border-radius:50%;background:var(--muted-2); }
+    .status-pill.inprogress::before { background:var(--blue); }
+    .status-pill.review::before { background:var(--warning); }
+    .status-pill.completed::before { background:var(--success); }
+    .deadline-list { display:grid;gap:12px; }
+    .deadline-item { display:flex;align-items:center;gap:10px; }
+    .date-tile { width:36px;height:39px;display:grid;place-content:center;border-radius:8px;background:var(--surface-2);text-align:center; }
+    .date-tile span { color:var(--muted);font-size:8px;text-transform:uppercase; }
+    .date-tile strong { font-size:13px;line-height:1.1; }
+    .deadline-copy { flex:1;min-width:0; }
+    .deadline-copy strong { display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:600; }
+    .deadline-copy span { color:var(--muted);font-size:9px; }
+    .right-panel { min-width:0;padding:24px 17px 30px;border-left:1px solid var(--border);background:var(--sidebar); }
+    .right-head { display:flex;align-items:center;justify-content:space-between;margin:9px 2px 20px; }
+    .right-head strong { font-size:12px; }
+    .right-section { margin:0 0 22px; }
+    .right-section-head { display:flex;align-items:center;justify-content:space-between;margin-bottom:11px; }
+    .right-section-head h2 { margin:0;font-size:11px;font-weight:650; }
+    .right-section-head button { border:0;background:none;color:var(--muted);cursor:pointer;font-size:10px; }
+    .schedule-list { display:grid;gap:9px; }
+    .schedule-item { display:flex;gap:9px;align-items:stretch; }
+    .schedule-time { width:43px;flex:none;color:var(--muted);font-size:9px;padding-top:8px; }
+    .schedule-content { flex:1;padding:8px 9px;border-left:2px solid var(--accent);border-radius:0 7px 7px 0;background:var(--surface); }
+    .schedule-content strong { display:block;font-size:10px;font-weight:600; }
+    .schedule-content span { color:var(--muted);font-size:9px; }
+    .quick-note { width:100%;min-height:87px;resize:vertical;padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);font-size:10px; }
+    .saved-note { display:block;margin-top:5px;color:var(--muted-2);font-size:9px;text-align:right; }
+    .right-deadline { display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border); }
+    .right-deadline:last-child { border:0; }
+    .right-deadline-copy { flex:1;min-width:0; }
+    .right-deadline-copy strong { display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:550; }
+    .right-deadline-copy span { color:var(--muted);font-size:9px; }
+    .section-toolbar { display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px; }
+    .filter-select { padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--muted);font-size:11px; }
+    .view-switch { display:inline-flex;padding:3px;border:1px solid var(--border);border-radius:9px;background:var(--surface); }
+    .view-switch button { padding:6px 9px;border:0;border-radius:6px;background:none;color:var(--muted);font-size:10px;cursor:pointer; }
+    .view-switch button.selected { background:var(--surface-3);color:var(--text); }
+    .tasks-table { width:100%;border-collapse:collapse; }
+    .tasks-table th { padding:10px 9px;border-bottom:1px solid var(--border);color:var(--muted);font-size:9px;font-weight:600;text-align:left; }
+    .tasks-table td { padding:10px 9px;border-bottom:1px solid var(--border);font-size:10px; }
+    .tasks-table tr:last-child td { border-bottom:0; }
+    .table-title { display:flex;align-items:center;gap:8px;min-width:160px; }
+    .table-title button { max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;background:none;text-align:left;color:var(--text);font-size:11px;cursor:pointer; }
+    .table-actions { display:flex;gap:4px;justify-content:flex-end; }
+    .mini-action { display:grid;place-items:center;width:27px;height:27px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--muted);cursor:pointer; }
+    .mini-action:hover { background:var(--surface-2);color:var(--text); }
+    .mini-action svg { width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7; }
+    .board { display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:10px;overflow-x:auto;padding-bottom:8px; }
+    .board-column { min-height:200px;padding:10px;border:1px solid var(--border);border-radius:11px;background:rgba(23,27,34,.45); }
+    .board-column.drag-over { border-color:var(--accent);background:var(--accent-soft); }
+    .board-heading { display:flex;align-items:center;gap:7px;margin:2px 2px 10px;font-size:10px;font-weight:650; }
+    .board-heading .count { margin-left:auto;color:var(--muted);font-weight:450; }
+    .board-card { margin-bottom:8px;padding:11px;border:1px solid var(--border);border-radius:9px;background:var(--surface);cursor:grab; }
+    .board-card:active { cursor:grabbing; }
+    .board-card h3 { margin:0 0 8px;font-size:10px;font-weight:600; }
+    .board-card p { margin:0 0 10px;color:var(--muted);font-size:9px; }
+    .board-card-foot { display:flex;justify-content:space-between;align-items:center; }
+    .calendar-grid { display:grid;grid-template-columns:repeat(7,minmax(100px,1fr));gap:8px;overflow-x:auto;padding-bottom:8px; }
+    .calendar-day { min-height:166px;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--surface); }
+    .calendar-day.today { border-color:rgba(199,166,106,.5); }
+    .calendar-day-head { display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;color:var(--muted);font-size:9px; }
+    .calendar-day-head strong { color:var(--text);font-size:13px; }
+    .calendar-task { margin:0 0 6px;padding:6px 7px;border-left:2px solid var(--accent);border-radius:4px;background:var(--surface-2);font-size:9px;cursor:pointer; }
+    .timeline { position:relative;display:grid;gap:10px;padding:4px 0; }
+    .timeline-row { display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center; }
+    .timeline-date { color:var(--muted);font-size:10px; }
+    .timeline-track { position:relative;height:34px;border-radius:7px;background:var(--surface-2);overflow:hidden; }
+    .timeline-bar { height:100%;display:flex;align-items:center;padding:0 9px;border-radius:7px;background:var(--accent-soft);border-left:3px solid var(--accent);color:var(--text);font-size:9px;white-space:nowrap;overflow:hidden;cursor:pointer; }
+    .project-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px; }
+    .project-card { padding:16px;cursor:pointer;transition:transform .16s ease,border .16s ease; }
+    .project-card:hover { transform:translateY(-2px);border-color:rgba(199,166,106,.35); }
+    .project-top { display:flex;align-items:center;gap:10px;margin-bottom:12px; }
+    .project-color { width:9px;height:34px;border-radius:6px; }
+    .project-top h3 { flex:1;margin:0;font-size:12px; }
+    .project-card p { min-height:32px;margin:0 0 15px;color:var(--muted);font-size:10px; }
+    .project-progress { display:flex;align-items:center;gap:9px;color:var(--muted);font-size:9px; }
+    .project-progress .progress-track { flex:1; }
+    .project-meta { display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);color:var(--muted);font-size:9px; }
+    .empty-state { padding:42px 18px;text-align:center;color:var(--muted); }
+    .empty-state strong { display:block;color:var(--text);font-size:13px;margin:8px 0 4px; }
+    .empty-state p { margin:0 auto 15px;max-width:320px;font-size:11px; }
+    .empty-icon { width:38px;height:38px;display:grid;place-items:center;margin:auto;border-radius:12px;background:var(--surface-2);color:var(--accent);font-size:17px; }
+    .note-layout { display:grid;grid-template-columns:minmax(0,.72fr) minmax(0,1.5fr);gap:13px;min-height:430px; }
+    .note-list { padding:8px; }
+    .note-item { width:100%;padding:11px;border:0;border-radius:8px;background:transparent;text-align:left;cursor:pointer; }
+    .note-item:hover,.note-item.selected { background:var(--surface-2); }
+    .note-item strong { display:block;font-size:11px; }
+    .note-item span { display:block;margin-top:4px;color:var(--muted);font-size:9px; }
+    .note-editor { display:flex;flex-direction:column;padding:17px; }
+    .note-editor input { border:0;border-bottom:1px solid var(--border);padding:4px 0 12px;background:transparent;color:var(--text);font-size:19px;font-weight:650;outline:none; }
+    .editor-toolbar { display:flex;gap:5px;flex-wrap:wrap;padding:11px 0;border-bottom:1px solid var(--border); }
+    .editor-toolbar button { min-width:29px;height:27px;padding:0 7px;border:1px solid var(--border);border-radius:6px;background:var(--surface-2);color:var(--muted);font-weight:650;font-size:10px;cursor:pointer; }
+    .note-editor textarea { flex:1;min-height:270px;resize:vertical;padding:14px 0;border:0;background:transparent;color:var(--text);font-size:12px;line-height:1.8; }
+    .notification-list { display:grid;gap:9px; }
+    .notification-card { display:flex;gap:11px;padding:13px; }
+    .notification-card.unread { border-color:rgba(199,166,106,.25); }
+    .notification-symbol { width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:9px;background:var(--accent-soft);color:var(--accent); }
+    .notification-copy { flex:1;min-width:0; }
+    .notification-copy strong { display:block;font-size:10px; }
+    .notification-copy p { margin:3px 0;color:var(--muted);font-size:10px; }
+    .notification-copy time { color:var(--muted-2);font-size:9px; }
+    .notification-actions { display:flex;gap:3px; }
+    .settings-grid { display:grid;grid-template-columns:1fr 1fr;gap:13px; }
+    .settings-card { padding:17px; }
+    .settings-card h2 { margin:0 0 5px;font-size:12px; }
+    .settings-card p { margin:0 0 14px;color:var(--muted);font-size:10px; }
+    .setting-row { display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border); }
+    .setting-row-copy { flex:1; }
+    .setting-row-copy strong { display:block;font-size:10px;font-weight:600; }
+    .setting-row-copy span { display:block;color:var(--muted);font-size:9px; }
+    .switch { width:34px;height:19px;position:relative;appearance:none;border:0;border-radius:20px;background:var(--surface-3);cursor:pointer;transition:background .15s; }
+    .switch::after { content:"";position:absolute;left:2px;top:2px;width:15px;height:15px;border-radius:50%;background:white;transition:transform .15s; }
+    .switch:checked { background:var(--accent); }
+    .switch:checked::after { transform:translateX(15px);background:#201a10; }
+    .security-callout { padding:14px;border:1px solid rgba(225,107,107,.25);border-radius:10px;background:rgba(225,107,107,.07);color:var(--muted);font-size:10px; }
+    .security-callout strong { display:block;margin-bottom:5px;color:var(--danger);font-size:11px; }
+    .profile-form { display:grid;gap:13px;max-width:500px; }
+    .field { display:grid;gap:6px; }
+    .field label { color:var(--muted);font-size:10px;font-weight:600; }
+    .field input,.field select,.field textarea { width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text);font-size:11px; }
+    .field textarea { min-height:80px;resize:vertical; }
+    .field-hint { color:var(--muted-2);font-size:9px; }
+    .modal-backdrop { position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.62);backdrop-filter:blur(4px); }
+    .modal-backdrop.open { display:flex; }
+    .modal { width:min(560px,100%);max-height:min(90vh,760px);overflow-y:auto;padding:21px;border:1px solid var(--border);border-radius:16px;background:var(--sidebar);box-shadow:var(--shadow);animation:appear .16s ease; }
+    .modal-head { display:flex;align-items:flex-start;gap:14px;margin-bottom:17px; }
+    .modal-head-copy { flex:1; }
+    .modal-head h2 { margin:0 0 4px;font-size:17px; }
+    .modal-head p { margin:0;color:var(--muted);font-size:10px; }
+    .modal-close { border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1; }
+    .form-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+    .form-grid .wide { grid-column:1/-1; }
+    .modal-actions { display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border); }
+    .detail-meta { display:flex;gap:7px;flex-wrap:wrap;margin:12px 0; }
+    .detail-description { white-space:pre-wrap;color:var(--muted);font-size:11px; }
+    .toast-region { position:fixed;z-index:80;right:20px;bottom:20px;display:grid;gap:8px; }
+    .toast { min-width:230px;max-width:360px;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);color:var(--text);box-shadow:var(--shadow);font-size:11px;animation:appear .18s ease; }
+    .toast.error { border-color:rgba(225,107,107,.45); }
+    .overlay { display:none; }
+    .hidden { display:none !important; }
+    @media (max-width:1250px) {
+      .app { grid-template-columns:228px minmax(0,1fr); }
+      .right-panel { display:none; }
+      .main { padding-right:28px;padding-left:28px; }
+    }
+    @media (max-width:820px) {
+      .app { display:block; }
+      .sidebar { position:fixed;left:0;top:0;width:260px;transform:translateX(-105%);box-shadow:var(--shadow); }
+      .sidebar.open { transform:translateX(0); }
+      .overlay.open { display:block;position:fixed;inset:0;z-index:19;background:rgba(0,0,0,.5); }
+      .main { padding:0 22px 32px; }
+      .mobile-menu { display:grid !important; }
+      .topbar { height:64px; }
+      .dashboard-grid { grid-template-columns:1fr; }
+      .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+    @media (max-width:560px) {
+      .main { padding:0 15px 26px; }
+      .topbar { gap:8px; }
+      .search-wrap { width:min(170px,42vw); }
+      .search-wrap kbd { display:none; }
+      .breadcrumb { display:none; }
+      .page { padding-top:21px; }
+      .page-head { flex-direction:column;gap:13px;margin-bottom:18px; }
+      .head-actions { width:100%; }
+      h1 { font-size:23px; }
+      .stats-grid { gap:9px; }
+      .stat-card { padding:12px; }
+      .stat-value { font-size:23px; }
+      .below-grid,.project-grid,.settings-grid,.note-layout { grid-template-columns:1fr; }
+      .note-layout { min-height:auto; }
+      .note-list { display:flex;gap:4px;overflow-x:auto; }
+      .note-item { min-width:120px; }
+      .note-editor textarea { min-height:200px; }
+      .table-wrap { overflow-x:auto; }
+      .tasks-table { min-width:650px; }
+      .form-grid { grid-template-columns:1fr; }
+      .form-grid .wide { grid-column:auto; }
+      .demo-banner { align-items:flex-start; }
+      .demo-banner button { white-space:nowrap; }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      *,*::before,*::after { scroll-behavior:auto !important;animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">N.</div>
+        <div><div class="brand-name">NOVA TASKS</div><div class="brand-caption">Your space to focus</div></div>
+      </div>
+      <button class="workspace-switch" id="workspaceButton" type="button" aria-label="Workspace options">
+        <span class="workspace-avatar">N</span><span class="workspace-name">Nova Workspace<span class="workspace-label">Personal space</span></span><span aria-hidden="true">⌄</span>
+      </button>
+      <div class="nav-section-label">Workspace</div>
+      <nav class="nav-list" id="primaryNav"></nav>
+      <div class="nav-section-label">Manage</div>
+      <nav class="nav-list" id="manageNav"></nav>
+      <div class="nav-spacer"></div>
+      <div class="sidebar-bottom">
+        <nav class="nav-list" id="footerNav"></nav>
+        <div class="user-row">
+          <div class="avatar">JD</div>
+          <div class="user-copy"><strong id="sidebarUserName">Jamie Doe</strong><span>Personal workspace</span></div>
+          <button class="mini-action" type="button" data-action="signout" aria-label="Sign out of demo" title="Exit demo">↗</button>
+        </div>
+      </div>
+    </aside>
+    <div class="overlay" id="overlay"></div>
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" type="button" id="menuToggle" aria-label="Open navigation"><span class="icon" data-icon="menu"></span></button>
+        <div class="breadcrumb">Nova Workspace <span aria-hidden="true">/</span> <strong id="breadcrumbCurrent">Dashboard</strong></div>
+        <div class="top-spacer"></div>
+        <label class="search-wrap"><span class="search-icon icon" data-icon="search"></span><input id="globalSearch" type="search" placeholder="Search tasks..." aria-label="Search tasks"><kbd>/</kbd></label>
+        <button class="icon-button" id="themeToggle" type="button" aria-label="Switch color theme" title="Switch color theme"><span class="icon" data-icon="sun"></span></button>
+        <button class="icon-button" type="button" data-nav="notifications" aria-label="Open notifications" title="Notifications"><span class="icon" data-icon="bell"></span><span class="unread-dot hidden" id="unreadDot"></span></button>
+      </header>
+      <section id="pageContent" class="page" aria-live="polite"></section>
+    </main>
+    <aside class="right-panel" id="rightPanel" aria-label="Daily overview"></aside>
+  </div>
+  <div class="modal-backdrop" id="modalBackdrop" role="presentation"></div>
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+  <script>
+    (() => {
+      "use strict";
+      const STORAGE_KEY = "nova-tasks-demo-v1";
+      const DAY = 86400000;
+      const isoDay = offset => {
+        const date = new Date();
+        date.setHours(12, 0, 0, 0);
+        date.setDate(date.getDate() + offset);
+        return date.toISOString().slice(0, 10);
+      };
+      const uid = () => `t-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+      const demoState = () => ({
+        tasks: [
+          { id:"task-1", title:"Finalize Q4 product roadmap", description:"Align the final milestones with the design and engineering teams.", due:isoDay(1), priority:"high", status:"inprogress", project:"Product launch", tags:["Planning","Team"], created:Date.now()-84000000, reminder:"" },
+          { id:"task-2", title:"Review onboarding flow", description:"Check the first-run experience and note friction points.", due:isoDay(2), priority:"urgent", status:"todo", project:"Website refresh", tags:["Design"], created:Date.now()-50000000, reminder:"" },
+          { id:"task-3", title:"Send stakeholder update", description:"Share this week's progress and upcoming decisions.", due:isoDay(0), priority:"medium", status:"review", project:"Product launch", tags:["Communication"], created:Date.now()-27000000, reminder:"" },
+          { id:"task-4", title:"Prepare launch checklist", description:"Make sure launch owners and dependencies are documented.", due:isoDay(4), priority:"medium", status:"todo", project:"Product launch", tags:["Launch"], created:Date.now()-16000000, reminder:"" },
+          { id:"task-5", title:"Organize research notes", description:"Bring interview findings into the shared research doc.", due:isoDay(5), priority:"low", status:"completed", project:"Website refresh", tags:["Research"], created:Date.now()-120000000, completedAt:Date.now()-18000000, reminder:"" },
+          { id:"task-6", title:"Update component library", description:"Document the new form and notification patterns.", due:isoDay(-1), priority:"high", status:"todo", project:"Website refresh", tags:["Design system"], created:Date.now()-8000000, reminder:"" },
+          { id:"task-7", title:"Book customer interviews", description:"Coordinate three discovery calls for next week.", due:isoDay(3), priority:"low", status:"inprogress", project:"Customer research", tags:["Customers"], created:Date.now()-90000000, reminder:"" }
+        ],
+        projects: [
+          { name:"Product launch", description:"A focused plan for the upcoming product release.", color:"#c7a66a", deadline:isoDay(8) },
+          { name:"Website refresh", description:"A thoughtful update to the core website experience.", color:"#8299d3", deadline:isoDay(14) },
+          { name:"Customer research", description:"Understand what matters most to our customers.", color:"#63ad8b", deadline:isoDay(18) }
+        ],
+        notes: [{ id:"note-1", title:"Weekly focus", body:"## This week\n\n- Finish the product roadmap\n- Review onboarding feedback\n- Leave space for deep work\n\nA calm plan is a useful plan.", updated:Date.now() }],
+        notifications: [
+          { id:"n-1", title:"Deadline coming up", body:"Finalize Q4 product roadmap is due soon.", time:Date.now()-1800000, read:false, category:"Task deadline" },
+          { id:"n-2", title:"Task completed", body:"Research notes was marked complete.", time:Date.now()-7200000, read:true, category:"Task update" },
+          { id:"n-3", title:"Workspace ready", body:"This is a demo workspace with sample content.", time:Date.now()-86400000, read:true, category:"Workspace" }
+        ],
+        quickNote:"Remember to leave a little room between meetings.",
+        userName:"Jamie Doe",
+        theme:"dark",
+        preferences:{ deadlines:true, taskUpdates:true, projectUpdates:true, securityAlerts:true },
+        view:"list",
+        trashed:[]
+      });
+      let state;
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        state = saved && Array.isArray(saved.tasks) && Array.isArray(saved.projects) ? { ...demoState(), ...saved } : demoState();
+      } catch (error) {
+        console.error("Could not load the NOVA demo workspace from local storage.", error);
+        state = demoState();
+      }
+      let activePage = "dashboard";
+      let activeNoteId = state.notes[0]?.id || null;
+      let currentSearch = "";
+      let activeModal = false;
+      let noteSaveTimer;
+      const byId = id => document.getElementById(id);
+      const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
+      const iconPaths = {
+        dashboard:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
+        tasks:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1 1 2-2m-3 7 1 1 2-2m-3 7 1 1 2-2"/>',
+        inbox:'<path d="M4 4h16v16H4z"/><path d="M4 13h4l2 3h4l2-3h4"/>',
+        today:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+        upcoming:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        projects:'<path d="M3 7h7l2 2h9v10H3z"/><path d="M3 7V5h7l2 2"/>',
+        calendar:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 9h18"/>',
+        notes:'<path d="M5 3h14v18H5z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+        completed:'<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/>',
+        trash:'<path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6"/><path d="M10 11v6m4-6v6"/>',
+        settings:'<circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.7-1.4-2.4L7.3 15a8 8 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.7 1.4 2.4L19.5 13a8 8 0 0 1-.1 2Z"/>',
+        security:'<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',
+        help:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.7 1.2c-.8 1.3-2.3 1.5-2.3 3.3M12 17h.01"/>',
+        search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+        sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>',
+        moon:'<path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/>',
+        bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12h4"/>',
+        menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
+        plus:'<path d="M12 5v14M5 12h14"/>',
+        close:'<path d="m18 6-12 12M6 6l12 12"/>',
+        edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>',
+        more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+        arrow:'<path d="M5 12h14m-7-7 7 7-7 7"/>'
+      };
+      const icon = name => `<svg viewBox="0 0 24 24" aria-hidden="true">${iconPaths[name] || iconPaths.tasks}</svg>`;
+      document.querySelectorAll("[data-icon]").forEach(node => { node.innerHTML = icon(node.dataset.icon); });
+      const save = () => {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        catch (error) { console.error("Could not save the NOVA demo workspace.", error); toast("Changes could not be saved in this browser.", true); }
+      };
+      const toast = (message, error = false) => {
+        const node = document.createElement("div");
+        node.className = `toast${error ? " error" : ""}`;
+        node.textContent = message;
+        byId("toastRegion").append(node);
+        window.setTimeout(() => node.remove(), 3400);
+      };
+      const formatDate = value => {
+        if (!value) return "No deadline";
+        const date = new Date(`${value}T12:00:00`);
+        return new Intl.DateTimeFormat("en", { month:"short", day:"numeric" }).format(date);
+      };
+      const formatFullDate = value => new Intl.DateTimeFormat("en", { weekday:"long", month:"long", day:"numeric", year:"numeric" }).format(value);
+      const relativeDate = value => {
+        const diff = Math.round((new Date(`${value}T12:00:00`).getTime() - new Date(`${isoDay(0)}T12:00:00`).getTime()) / DAY);
+        if (diff === 0) return "Today";
+        if (diff === 1) return "Tomorrow";
+        if (diff === -1) return "Yesterday";
+        if (diff < -1) return `${Math.abs(diff)} days overdue`;
+        return `In ${diff} days`;
+      };
+      const statusLabel = status => ({ todo:"To do", inprogress:"In progress", review:"In review", completed:"Completed" }[status] || "To do");
+      const priorityLabel = value => ({ low:"Low", medium:"Medium", high:"High", urgent:"Urgent" }[value] || "Medium");
+      const liveTasks = () => state.tasks.filter(task => task.status !== "deleted");
+      const activeTasks = () => liveTasks().filter(task => task.status !== "completed");
+      const dueSoon = () => activeTasks().filter(task => task.due && task.due >= isoDay(0) && task.due <= isoDay(7)).sort((a,b) => a.due.localeCompare(b.due));
+      const navItems = [
+        { id:"dashboard", label:"Dashboard", icon:"dashboard" }, { id:"tasks", label:"My Tasks", icon:"tasks", count:() => activeTasks().length },
+        { id:"inbox", label:"Inbox", icon:"inbox", count:() => state.notifications.filter(item => !item.read).length },
+        { id:"today", label:"Today", icon:"today" }, { id:"upcoming", label:"Upcoming", icon:"upcoming" }, { id:"projects", label:"Projects", icon:"projects" },
+        { id:"calendar", label:"Calendar", icon:"calendar" }, { id:"notes", label:"Notes", icon:"notes" }, { id:"completed", label:"Completed", icon:"completed", count:() => state.tasks.filter(task => task.status === "completed").length },
+        { id:"trash", label:"Trash", icon:"trash", count:() => state.trashed.length }
+      ];
+      const manageItems = [{ id:"notifications", label:"Notifications", icon:"bell" }];
+      const footerItems = [{ id:"profile", label:"My profile", icon:"settings" }, { id:"settings", label:"Settings", icon:"settings" }, { id:"security", label:"Security center", icon:"security" }, { id:"help", label:"Help & support", icon:"help" }];
+      const navButton = item => `<button type="button" class="nav-item${activePage === item.id ? " active" : ""}" data-nav="${item.id}"><span class="nav-icon">${icon(item.icon)}</span><span>${item.label}</span>${item.count ? `<span class="nav-count">${item.count()}</span>` : ""}</button>`;
+      const renderNav = () => {
+        byId("primaryNav").innerHTML = navItems.slice(0, 10).map(navButton).join("");
+        byId("manageNav").innerHTML = manageItems.map(navButton).join("");
+        byId("footerNav").innerHTML = footerItems.map(navButton).join("");
+        byId("sidebarUserName").textContent = state.userName;
+        byId("unreadDot").classList.toggle("hidden", !state.notifications.some(item => !item.read));
+      };
+      const pageTitle = id => ({ dashboard:"Dashboard", tasks:"My Tasks", inbox:"Inbox", today:"Today", upcoming:"Upcoming", projects:"Projects", calendar:"Calendar", notes:"Notes", completed:"Completed", trash:"Trash", notifications:"Notifications", profile:"My profile", settings:"Settings", security:"Security center", help:"Help & support" }[id] || "Dashboard");
+      const emptyState = (title, message, action = "") => `<div class="empty-state"><div class="empty-icon">✦</div><strong>${title}</strong><p>${message}</p>${action}</div>`;
+      const taskMatchesSearch = task => !currentSearch || `${task.title} ${task.description} ${task.project} ${(task.tags || []).join(" ")}`.toLowerCase().includes(currentSearch.toLowerCase());
+      const taskRow = task => `
+        <div class="task-row">
+          <input class="task-check" type="checkbox" aria-label="Mark ${escapeHtml(task.title)} complete" data-complete="${escapeHtml(task.id)}" ${task.status === "completed" ? "checked" : ""}>
+          <div class="task-main" role="button" tabindex="0" data-detail="${escapeHtml(task.id)}">
+            <div class="task-title${task.status === "completed" ? " done" : ""}">${escapeHtml(task.title)}</div>
+            <div class="task-meta"><span class="priority-dot ${escapeHtml(task.priority)}"></span>${priorityLabel(task.priority)}<span aria-hidden="true">·</span>${escapeHtml(task.project || "Personal")}</div>
+          </div>
+          <span class="status-pill ${escapeHtml(task.status)}">${statusLabel(task.status)}</span>
+          <span class="tag">${formatDate(task.due)}</span>
+        </div>`;
+      const taskTable = tasks => {
+        if (!tasks.length) return emptyState("Nothing on your list", "Create a task or adjust your filters to see work here.", `<button class="btn btn-primary btn-small" data-action="new-task">${icon("plus")} Add a task</button>`);
+        return `<div class="table-wrap"><table class="tasks-table"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Project</th><th>Due date</th><th></th></tr></thead><tbody>${tasks.map(task => `<tr>
+          <td><div class="table-title"><input class="task-check" type="checkbox" aria-label="Mark ${escapeHtml(task.title)} complete" data-complete="${escapeHtml(task.id)}" ${task.status === "completed" ? "checked" : ""}><button type="button" data-detail="${escapeHtml(task.id)}">${escapeHtml(task.title)}</button></div></td>
+          <td><span class="status-pill ${escapeHtml(task.status)}">${statusLabel(task.status)}</span></td>
+          <td><span class="priority-dot ${escapeHtml(task.priority)}"></span> ${priorityLabel(task.priority)}</td><td>${escapeHtml(task.project || "Personal")}</td><td>${formatDate(task.due)}</td>
+          <td><div class="table-actions"><button class="mini-action" type="button" data-edit="${escapeHtml(task.id)}" aria-label="Edit task">${icon("edit")}</button><button class="mini-action" type="button" data-delete="${escapeHtml(task.id)}" aria-label="Move task to trash">${icon("trash")}</button></div></td>
+        </tr>`).join("")}</tbody></table></div>`;
+      };
+      const taskToolbar = (tasks, showViews = true) => `<div class="section-toolbar">
+        <select class="filter-select" id="filterStatus" aria-label="Filter by status"><option value="">All statuses</option>${["todo","inprogress","review","completed"].map(s => `<option value="${s}">${statusLabel(s)}</option>`).join("")}</select>
+        <select class="filter-select" id="filterPriority" aria-label="Filter by priority"><option value="">All priorities</option>${["urgent","high","medium","low"].map(p => `<option value="${p}">${priorityLabel(p)}</option>`).join("")}</select>
+        <select class="filter-select" id="filterProject" aria-label="Filter by project"><option value="">All projects</option>${state.projects.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join("")}</select>
+        <select class="filter-select" id="sortTasks" aria-label="Sort tasks"><option value="date">Sort: due date</option><option value="priority">Sort: priority</option><option value="created">Sort: recently added</option></select>
+        ${showViews ? `<span class="top-spacer"></span><div class="view-switch" role="group" aria-label="Task view">${["list","board","calendar","timeline"].map(v => `<button type="button" data-view="${v}" class="${state.view === v ? "selected" : ""}">${v[0].toUpperCase()+v.slice(1)}</button>`).join("")}</div>` : ""}</div>`;
+      const taskView = tasks => {
+        if (state.view === "board") {
+          const columns = ["todo","inprogress","review","completed"];
+          return `<div class="board">${columns.map(status => `<section class="board-column" data-drop="${status}"><div class="board-heading"><span class="status-pill ${status}">${statusLabel(status)}</span><span class="count">${tasks.filter(task => task.status === status).length}</span></div>${tasks.filter(task => task.status === status).map(task => `<article class="board-card" draggable="true" data-drag="${escapeHtml(task.id)}"><h3 data-detail="${escapeHtml(task.id)}" tabindex="0">${escapeHtml(task.title)}</h3><p>${escapeHtml(task.project || "Personal")} · ${formatDate(task.due)}</p><div class="board-card-foot"><span class="priority-dot ${escapeHtml(task.priority)}"></span><button class="mini-action" type="button" data-edit="${escapeHtml(task.id)}" aria-label="Edit task">${icon("edit")}</button></div></article>`).join("")}</section>`).join("")}</div>`;
+        }
+        if (state.view === "calendar") return calendarView(tasks);
+        if (state.view === "timeline") return `<div class="card panel"><div class="timeline">${tasks.slice().sort((a,b) => (a.due || "9999").localeCompare(b.due || "9999")).map(task => `<div class="timeline-row"><div class="timeline-date">${formatDate(task.due)}</div><div class="timeline-track"><button class="timeline-bar" type="button" style="width:${Math.max(28,Math.min(100,30 + (task.priority === "urgent" ? 45 : task.priority === "high" ? 28 : 0)))}%" data-detail="${escapeHtml(task.id)}">${escapeHtml(task.title)}</button></div></div>`).join("") || emptyState("No tasks to timeline", "Add due dates to see a schedule.")}</div></div>`;
+        return taskTable(tasks);
+      };
+      const calendarView = tasks => {
+        const start = new Date(`${isoDay(0)}T12:00:00`);
+        const weekStart = new Date(start);
+        weekStart.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+        const days = Array.from({length:14}, (_, index) => {
+          const date = new Date(weekStart);
+          date.setDate(weekStart.getDate() + index);
+          const dayString = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+          return `<div class="calendar-day${dayString === isoDay(0) ? " today" : ""}"><div class="calendar-day-head"><span>${new Intl.DateTimeFormat("en",{weekday:"short"}).format(date)}</span><strong>${date.getDate()}</strong></div>${tasks.filter(task => task.due === dayString).map(task => `<button class="calendar-task" type="button" data-detail="${escapeHtml(task.id)}">${escapeHtml(task.title)}</button>`).join("")}</div>`;
+        }).join("");
+        return `<div class="calendar-grid">${days}</div>`;
+      };
+      const dashboard = () => {
+        const tasks = liveTasks();
+        const completed = tasks.filter(task => task.status === "completed").length;
+        const pending = activeTasks().length;
+        const overdue = activeTasks().filter(task => task.due && task.due < isoDay(0)).length;
+        const recent = tasks.slice().sort((a,b) => b.created-a.created).slice(0,4);
+        const deadlines = dueSoon().slice(0,4);
+        const total = tasks.length;
+        const priorities = ["urgent","high","medium","low"].map(priority => {
+          const count = activeTasks().filter(task => task.priority === priority).length;
+          return `<div class="priority-line"><span>${priorityLabel(priority)}</span><div class="progress-track"><div class="progress-fill" style="width:${Math.max(count ? 8 : 0, count / Math.max(1,pending) * 100)}%"></div></div><strong>${count}</strong></div>`;
+        }).join("");
+        const days = Array.from({length:7},(_,i) => new Date(Date.now() - (6-i)*DAY));
+        const chartValues = days.map(date => {
+          const start = new Date(date);
+          start.setHours(0,0,0,0);
+          const end = start.getTime() + DAY;
+          return state.tasks.filter(task => task.status === "completed" && task.completedAt >= start.getTime() && task.completedAt < end).length;
+        });
+        return `<div class="demo-banner"><strong>DEMO WORKSPACE</strong><span>Sample tasks and activity are stored only in this browser. No account or secure backend is connected.</span><button type="button" data-nav="security">Security details</button></div>
+          <div class="page-head"><div class="page-head-copy"><div class="eyebrow">Your workspace · ${formatFullDate(new Date())}</div><h1>Welcome back, ${escapeHtml(state.userName.split(" ")[0])}.</h1><p class="page-subtitle">A little progress adds up. Here's your focus for today.</p></div><div class="head-actions"><button class="btn btn-primary" type="button" data-action="new-task">${icon("plus")} Quick add task</button></div></div>
+          <div class="stats-grid">
+            <article class="card stat-card"><div class="stat-top"><span>Total tasks</span><span class="stat-icon">${icon("tasks")}</span></div><div class="stat-value">${total}</div><div class="stat-foot">Across your workspace</div></article>
+            <article class="card stat-card"><div class="stat-top"><span>Completed</span><span class="stat-icon">${icon("completed")}</span></div><div class="stat-value">${completed}</div><div class="stat-foot"><span class="positive">${total ? Math.round(completed / total * 100) : 0}%</span> of all tasks</div></article>
+            <article class="card stat-card"><div class="stat-top"><span>In progress</span><span class="stat-icon">${icon("upcoming")}</span></div><div class="stat-value">${pending}</div><div class="stat-foot">Ready when you are</div></article>
+            <article class="card stat-card"><div class="stat-top"><span>Overdue</span><span class="stat-icon">${icon("calendar")}</span></div><div class="stat-value">${overdue}</div><div class="stat-foot">${overdue ? "Needs a quick review" : "You're all caught up"}</div></article>
+          </div>
+          <div class="dashboard-grid">
+            <section class="card panel"><div class="panel-head"><div><h2>Productivity overview</h2><p>Tasks completed this week</p></div><span class="tag">Last 7 days</span></div>
+              <div class="chart">${days.map((date,i)=>`<div class="chart-day"><div class="chart-bars"><span class="chart-bar" title="${chartValues[i]} tasks completed" style="height:${Math.max(3, Math.min(100, chartValues[i]*22))}%"></span></div><span class="chart-day-label">${new Intl.DateTimeFormat("en",{weekday:"short"}).format(date)}</span></div>`).join("")}</div>
+            </section>
+            <section class="card panel"><div class="panel-head"><div><h2>Priority breakdown</h2><p>Where your attention goes</p></div><span class="tag">${pending} open</span></div><div class="priority-stack">${priorities}</div></section>
+          </div>
+          <div class="below-grid">
+            <section class="card panel"><div class="panel-head"><div><h2>Recently touched</h2><p>Fresh updates from your workspace</p></div><button class="text-link" type="button" data-nav="tasks">View all →</button></div><div class="task-list">${recent.length ? recent.map(taskRow).join("") : emptyState("No activity yet","Create a task to get started.")}</div></section>
+            <section class="card panel"><div class="panel-head"><div><h2>Upcoming deadlines</h2><p>Next seven days</p></div><button class="text-link" type="button" data-nav="upcoming">See schedule →</button></div><div class="deadline-list">${deadlines.length ? deadlines.map(task => `<div class="deadline-item"><div class="date-tile"><span>${new Intl.DateTimeFormat("en",{month:"short"}).format(new Date(`${task.due}T12:00:00`))}</span><strong>${new Date(`${task.due}T12:00:00`).getDate()}</strong></div><div class="deadline-copy"><strong>${escapeHtml(task.title)}</strong><span>${escapeHtml(task.project || "Personal")} · ${relativeDate(task.due)}</span></div><span class="priority-dot ${escapeHtml(task.priority)}"></span></div>`).join("") : `<span class="page-subtitle">No upcoming deadlines.</span>`}</div></section>
+          </div>`;
+      };
+      const taskPage = page => {
+        let tasks = liveTasks().filter(taskMatchesSearch);
+        const today = isoDay(0);
+        if (page === "completed") tasks = tasks.filter(task => task.status === "completed");
+        else if (page === "today") tasks = tasks.filter(task => task.due === today && task.status !== "completed");
+        else if (page === "upcoming") tasks = tasks.filter(task => task.due >= today && task.status !== "completed");
+        else if (page === "inbox") tasks = tasks.filter(task => task.status === "todo" || task.status === "review");
+        else tasks = tasks.filter(task => task.status !== "completed");
+        return tasks;
+      };
+      const renderTasksPage = (page) => {
+        const title = pageTitle(page);
+        const descriptions = { tasks:"Everything you need to move forward, in one place.", today:"A clear view of what needs your attention today.", upcoming:"Your open tasks, ordered by what’s coming next.", completed:"A record of the things you’ve finished.", inbox:"Tasks waiting for a decision or a next step." };
+        const tasks = taskPage(page);
+        return `<div class="page-head"><div class="page-head-copy"><div class="eyebrow">Workspace / ${title}</div><h1>${title}</h1><p class="page-subtitle">${descriptions[page] || ""}</p></div><div class="head-actions"><button class="btn btn-primary" type="button" data-action="new-task">${icon("plus")} New task</button></div></div>
+          ${taskToolbar(tasks, page === "tasks" || page === "upcoming")}
+          <div id="taskResults">${page === "tasks" || page === "upcoming" ? taskView(applyFilters(tasks)) : taskTable(applyFilters(tasks))}</div>`;
+      };
+      const applyFilters = tasks => {
+        const status = byId("filterStatus")?.value || "";
+        const priority = byId("filterPriority")?.value || "";
+        const project = byId("filterProject")?.value || "";
+        const sort = byId("sortTasks")?.value || "date";
+        const filtered = tasks.filter(task => (!status || task.status === status) && (!priority || task.priority === priority) && (!project || task.project === project));
+        const priorityOrder = {urgent:0,high:1,medium:2,low:3};
+        return filtered.sort((a,b) => sort === "priority" ? priorityOrder[a.priority] - priorityOrder[b.priority] : sort === "created" ? b.created-a.created : (a.due || "9999").localeCompare(b.due || "9999"));
+      };
+      const projectsPage = () => `<div class="page-head"><div class="page-head-copy"><div class="eyebrow">Workspace / Projects</div><h1>Projects</h1><p class="page-subtitle">Keep goals, tasks, and milestones connected.</p></div><div class="head-actions"><button class="btn btn-primary" type="button" data-action="new-project">${icon("plus")} New project</button></div></div>
+        <div class="project-grid">${state.projects.map(project => {
+          const tasks = liveTasks().filter(task => task.project === project.name);
+          const done = tasks.filter(task => task.status === "completed").length;
+          const pct = tasks.length ? Math.round(done/tasks.length*100) : 0;
+          return `<article class="card project-card" tabindex="0" role="button" data-project="${escapeHtml(project.name)}"><div class="project-top"><span class="project-color" style="background:${escapeHtml(project.color)}"></span><h3>${escapeHtml(project.name)}</h3><button class="mini-action" type="button" data-project-edit="${escapeHtml(project.name)}" aria-label="Edit project">${icon("edit")}</button></div><p>${escapeHtml(project.description)}</p><div class="project-progress"><span>${pct}%</span><div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${escapeHtml(project.color)}"></div></div><span>${done}/${tasks.length} done</span></div><div class="project-meta"><span>${tasks.length} tasks</span><span>Due ${formatDate(project.deadline)}</span></div></article>`;
+        }).join("")}${state.projects.length ? "" : emptyState("No projects yet","Create a project to group related work.")}</div>`;
+      const projectDetail = name => {
+        const project = state.projects.find(item => item.name === name);
+        if (!project) return;
+        const tasks = liveTasks().filter(task => task.project === name);
+        openModal(`<div class="modal-head"><div class="project-color" style="background:${escapeHtml(project.color)}"></div><div class="modal-head-copy"><h2>${escapeHtml(project.name)}</h2><p>${escapeHtml(project.description)}</p></div><button class="modal-close" type="button" data-close-modal aria-label="Close">×</button></div><div class="detail-meta"><span class="tag">${tasks.length} tasks</span><span class="tag">Deadline ${formatDate(project.deadline)}</span></div><h3 class="section-title">Project tasks</h3><div class="task-list">${tasks.length ? tasks.map(taskRow).join("") : `<p class="page-subtitle">No tasks in this project yet.</p>`}</div><div class="modal-actions"><button class="btn btn-small" type="button" data-action="new-task" data-task-project="${escapeHtml(project.name)}">${icon("plus")} Add task</button></div>`);
+      };
+      const projectsForm = (projectName = "") => {
+        const project = state.projects.find(item => item.name === projectName);
+        openModal(`<div class="modal-head"><div class="modal-head-copy"><div class="eyebrow">Workspace setup</div><h2>${project ? "Edit project" : "New project"}</h2><p>Give your work a clear home.</p></div><button class="modal-close" type="button" data-close-modal aria-label="Close">×</button></div>
+          <form id="projectForm" data-old-name="${escapeHtml(projectName)}"><div class="form-grid">
+            <div class="field wide"><label for="projectName">Project name *</label><input id="projectName" name="name" required maxlength="70" value="${escapeHtml(project?.name || "")}"></div>
+            <div class="field wide"><label for="projectDescription">Description</label><textarea id="projectDescription" name="description" maxlength="240">${escapeHtml(project?.description || "")}</textarea></div>
+            <div class="field"><label for="projectColor">Project color</label><input id="projectColor" name="color" type="color" value="${escapeHtml(project?.color || "#c7a66a")}"></div>
+            <div class="field"><label for="projectDeadline">Deadline</label><input id="projectDeadline" name="deadline" type="date" value="${escapeHtml(project?.deadline || "")}"></div>
+          </div><div class="modal-actions"><button class="btn" type="button" data-close-modal>Cancel</button><button class="btn btn-primary" type="submit">${project ? "Save changes" : "Create project"}</button></div></form>`);
+      };
+      const notesPage = () => {
+        if (!state.notes.length) activeNoteId = null;
+        const active = state.notes.find(note => note.id === activeNoteId);
+        return `<div class="page-head"><div class="page-head-copy"><div class="eyebrow">Workspace / Notes</div><h1>Notes</h1><p class="page-subtitle">A quiet place for the ideas you want to keep.</p></div><div class="head-actions"><button class="btn btn-primary" type="button" data-action="new-note">${icon("plus")} New note</button></div></div>
+          <div class="note-layout"><div class="card note-list">${state.notes.map(note => `<button class="note-item${note.id === activeNoteId ? " selected" : ""}" type="button" data-note="${escapeHtml(note.id)}"><strong>${escapeHtml(note.title || "Untitled note")}</strong><span>${new Date(note.updated).toLocaleDateString("en",{month:"short",day:"numeric"})} · ${(note.body || "").slice(0,42).replace(/\n/g," ")}</span></button>`).join("") || `<div class="empty-state">No notes yet.</div>`}</div>
+            ${active ? `<section class="card note-editor"><input id="noteTitle" aria-label="Note title" value="${escapeHtml(active.title)}" maxlength="100"><div class="editor-toolbar" aria-label="Note formatting"><button type="button" data-format="heading" title="Insert heading">H1</button><button type="button" data-format="bold" title="Insert bold formatting"><b>B</b></button><button type="button" data-format="italic" title="Insert italic formatting"><i>I</i></button><button type="button" data-format="bullet" title="Insert bullet list">• List</button><button type="button" data-format="check" title="Insert checklist">☐</button><button type="button" data-format="link" title="Insert link">Link</button></div><textarea id="noteBody" aria-label="Note content" placeholder="Start writing...">${escapeHtml(active.body)}</textarea><span class="saved-note" id="noteSaveStatus">Saved to this browser</span></section>` : `<section class="card">${emptyState("Start with a note","Capture a thought, a meeting summary, or a plan.")}</section>`}
+          </div>`;
+      };
+      const notificationsPage = () => `<div class="page-head"><div class="page-head-copy"><div class="eyebrow">Workspace / Updates</div><h1>Notifications</h1><p class="page-subtitle">A little signal about what changed in your workspace.</p></div><div class="head-actions"><button class="btn btn-small" type="button" data-action="read-all">Mark all read</button></div></div>
+        <div class="notification-list">${state.notifications.map(item => `<article class="card notification-card${item.read ? "" : " unread"}"><span class="notification-symbol">${item.category === "Task deadline" ? "◷" : item.category === "Security" ? "◇" : "✦"}</span><div class="notification-copy"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.body)}</p><time>${new Date(item.time).toLocaleString("en",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})} · ${escapeHtml(item.category)}</time></div><div class="notification-actions">${item.read ? "" : `<button class="mini-action" type="button" data-read="${escapeHtml(item.id)}" aria-label="Mark as read" title="Mark as read">✓</button>`}<button class="mini-action" type="button" data-notification-delete="${escapeHtml(item.id)}" aria-label="Delete notification" title="Delete">×</button></div></article>`).join("") || emptyState("You're all caught up","New workspace updates will appear here.")}</div>`;
+      const settingsPage = () => `<div class="page-head"><div class="page-head-copy"><div class="eyebrow">Workspace / Preferences</div><h1>Settings</h1><p class="page-subtitle">Make your workspace feel right for you.</p></div></div>
+        <div class="settings-grid"><section class="card settings-card"><h2>Appearance</h2><p>Choose the look that feels comfortable.</p><div class="setting-row"><div class="setting-row-copy"><strong>Light appearance</strong><span>Switch between light and dark mode</span></div><input class="switch" type="checkbox" id="themeSwitch" aria-label="Use light appearance" ${state.theme === "light" ? "checked" : ""}></div></section>
+        <section class="card settings-card"><h2>Notification preferences</h2><p>Choose which demo updates to show in your workspace.</p>${Object.entries({deadlines:"Deadline reminders",taskUpdates:"Task updates",projectUpdates:"Project updates",securityAlerts:"Security notices"}).map(([key,label])=>`<div class="setting-row"><div class="setting-row-copy"><strong>${label}</strong><span>Local demo preference</span></div><input class="switch" type="checkbox" data-preference="${key}" aria-label="${label}" ${state.preferences[key] ? "checked" : ""}></div>`).join("")}</section>
+        <section class="card settings-card"><h2>Workspace data</h2><p>Export or reset this browser's demo data.</p><div class="setting-row"><div class="setting-row-copy"><strong>Export workspace</strong><span>Download a JSON copy of your demo tasks and notes</span></div><button class="btn btn-small" type="button" data-action="export">Export</button></div><div class="setting-row"><div class="setting-row-copy"><strong>Reset demo workspace</strong><span>Restore the original sample data on this device</span></div><button class="btn btn-small btn-danger" type="button" data-action="reset">Reset</button></div></section>
+        <section class="card settings-card"><h2>Account & security</h2><p>Authentication and account controls need a trusted server.</p><div class="setting-row"><div class="setting-row-copy"><strong>Security center</strong><span>See what's available in this static demo</span></div><button class="btn btn-small" type="button" data-nav="security">View</button></div></section></div>`;
+      const securityPage = () => `<div class="page-head"><div class="page-head-copy"><div class="eyebrow">Workspace / Account</div><h1>Security center</h1><p class="page-subtitle">Understand the security boundary of this demo before adding real data.</p></div></div>
+        <div class="security-callout"><strong>Demo only — no authentication backend is connected</strong>This static page does not create accounts, verify email, reset passwords, manage sessions, enforce permissions, or securely store private data. Do not enter real credentials or sensitive information here. Browser-local demo data is not protected from other people using this device.</div>
+        <div class="settings-grid" style="margin-top:14px"><section class="card settings-card"><h2>Account controls</h2><p>These features are unavailable until server-side identity and session management are implemented and tested.</p>${["Email verification","Password change & reset","Multi-factor authentication","Active sessions & sign out all devices","Login history & connected devices","Delete account"].map(label=>`<div class="setting-row"><div class="setting-row-copy"><strong>${label}</strong><span>Not configured for this static demo</span></div><span class="tag">Unavailable</span></div>`).join("")}</section>
+        <section class="card settings-card"><h2>Production security checklist</h2><p>Before handling real accounts or private workspace content:</p>${["Trusted server-side authentication provider","Authorization checks on every protected request","Secure HttpOnly SameSite session cookies and CSRF protection","Database ownership policies, validation, and backups","HTTPS, CSP, security headers, and rate limiting","Audit events, data export, and account deletion"].map(item=>`<div class="setting-row"><span class="notification-symbol">!</span><div class="setting-row-copy"><strong>${item}</strong><span>Requires backend implementation</span></div></div>`).join("")}</section></div>`;
+      const profilePage = () => `<div class="page-head"><div class="page-head-copy"><div class="eyebrow">Workspace / Profile</div><h1>My profile</h1><p class="page-subtitle">This demo profile is stored in this browser only.</p></div></div>
+        <section class="card settings-card"><form id="profileForm" class="profile-form"><div class="field"><label for="profileName">Display name</label><input id="profileName" name="name" value="${escapeHtml(state.userName)}" maxlength="50" required></div><div class="field"><label for="profileEmail">Email address</label><input id="profileEmail" type="email" value="jamie@example.com" disabled><span class="field-hint">Example only; no email account is connected.</span></div><button class="btn btn-primary" type="submit">Save profile</button></form></section>`;
+      const trashPage = () => `<div class="page-head"><div class="page-head-copy"><div class="eyebrow">Workspace / Archive</div><h1>Trash</h1><p class="page-subtitle">Restore an item or permanently remove it from this browser.</p></div></div>${state.trashed.length ? `<div class="card panel">${state.trashed.map(task=>`<div class="task-row"><span class="task-main"><span class="task-title">${escapeHtml(task.title)}</span><span class="task-meta">Moved to trash</span></span><button class="btn btn-small" type="button" data-restore="${escapeHtml(task.id)}">Restore</button><button class="btn btn-small btn-danger" type="button" data-delete-permanent="${escapeHtml(task.id)}">Delete forever</button></div>`).join("")}</div>` : emptyState("Trash is empty","Tasks you delete will stay here until you remove them permanently.")}`;
+      const helpPage = () => `<div class="page-head"><div class="page-head-copy"><div class="eyebrow">Workspace / Support</div><h1>Help & support</h1><p class="page-subtitle">A few pointers for using this NOVA TASKS demo.</p></div></div><div class="settings-grid"><section class="card settings-card"><h2>Getting started</h2><p>Create a task, set a deadline and priority, and switch between List, Board, Calendar, and Timeline views. Changes are saved in this browser.</p><button class="btn btn-small btn-primary" type="button" data-action="new-task">Create a task</button></section><section class="card settings-card"><h2>Need account security?</h2><p>This static preview has no real user accounts or protected server. Don't use it for sensitive data.</p><button class="btn btn-small" type="button" data-nav="security">Read security details</button></section></div>`;
+      const renderRightPanel = () => {
+        const tasks = activeTasks();
+        const schedule = tasks.filter(task => task.due === isoDay(0));
+        const priorities = tasks.filter(task => task.priority === "urgent" || task.priority === "high").slice(0,3);
+        const upcoming = dueSoon().slice(0,3);
+        byId("rightPanel").innerHTML = `<div class="right-head"><strong>Today at a glance</strong><span class="tag">${new Intl.DateTimeFormat("en",{weekday:"short",month:"short",day:"numeric"}).format(new Date())}</span></div>
+          <section class="right-section"><div class="right-section-head"><h2>Today's schedule</h2><button type="button" data-nav="today">View all</button></div><div class="schedule-list">${schedule.length ? schedule.map((task,i)=>`<div class="schedule-item"><span class="schedule-time">${i ? "2:30 PM" : "10:00 AM"}</span><div class="schedule-content"><strong>${escapeHtml(task.title)}</strong><span>${escapeHtml(task.project || "Personal")}</span></div></div>`).join("") : `<span class="page-subtitle">Nothing due today. Enjoy the breathing room.</span>`}</div></section>
+          <section class="right-section"><div class="right-section-head"><h2>Priority focus</h2><button type="button" data-nav="tasks">Tasks →</button></div>${priorities.length ? priorities.map(task=>`<div class="right-deadline"><span class="priority-dot ${escapeHtml(task.priority)}"></span><div class="right-deadline-copy"><strong>${escapeHtml(task.title)}</strong><span>${priorityLabel(task.priority)} priority · ${relativeDate(task.due)}</span></div></div>`).join("") : `<span class="page-subtitle">No high-priority tasks right now.</span>`}</section>
+          <section class="right-section"><div class="right-section-head"><h2>Coming up</h2><button type="button" data-nav="upcoming">All deadlines →</button></div>${upcoming.length ? upcoming.map(task=>`<div class="right-deadline"><span class="date-tile"><strong>${new Date(`${task.due}T12:00:00`).getDate()}</strong></span><div class="right-deadline-copy"><strong>${escapeHtml(task.title)}</strong><span>${relativeDate(task.due)}</span></div></div>`).join("") : `<span class="page-subtitle">No upcoming deadlines.</span>`}</section>
+          <section class="right-section"><div class="right-section-head"><h2>Quick note</h2><button type="button" data-nav="notes">Open notes →</button></div><textarea id="quickNote" class="quick-note" aria-label="Quick note" placeholder="Capture a thought...">${escapeHtml(state.quickNote || "")}</textarea><span class="saved-note" id="quickNoteStatus">Saved in this browser</span></section>
+          <section class="right-section"><div class="right-section-head"><h2>Notifications</h2><button type="button" data-nav="notifications">See all →</button></div>${state.notifications.slice(0,2).map(item=>`<div class="right-deadline"><span class="notification-symbol">${item.read ? "·" : "•"}</span><div class="right-deadline-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.body)}</span></div></div>`).join("") || `<span class="page-subtitle">No new updates.</span>`}</section>
+          <div class="demo-banner"><strong>LOCAL DEMO</strong><span>Data stays in this browser.</span></div>`;
+      };
+      const render = () => {
+        document.documentElement.dataset.theme = state.theme === "light" ? "light" : "dark";
+        byId("themeToggle").innerHTML = `<span class="icon">${icon(state.theme === "dark" ? "sun" : "moon")}</span>`;
+        byId("themeToggle").setAttribute("aria-label", state.theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+        byId("breadcrumbCurrent").textContent = pageTitle(activePage);
+        renderNav();
+        const content = activePage === "dashboard" ? dashboard()
+          : ["tasks","today","upcoming","completed","inbox"].includes(activePage) ? renderTasksPage(activePage)
+          : activePage === "projects" ? projectsPage()
+          : activePage === "calendar" ? `<div class="page-head"><div class="page-head-copy"><div class="eyebrow">Workspace / Calendar</div><h1>Calendar</h1><p class="page-subtitle">A two-week look at the dates attached to your tasks.</p></div><div class="head-actions"><button class="btn btn-primary" type="button" data-action="new-task">${icon("plus")} New task</button></div></div>${calendarView(liveTasks().filter(taskMatchesSearch))}`
+          : activePage === "notes" ? notesPage()
+          : activePage === "notifications" ? notificationsPage()
+          : activePage === "settings" ? settingsPage()
+          : activePage === "security" ? securityPage()
+          : activePage === "profile" ? profilePage()
+          : activePage === "trash" ? trashPage()
+          : helpPage();
+        byId("pageContent").innerHTML = content;
+        renderRightPanel();
+        bindTaskFilters();
+      };
+      const bindTaskFilters = () => {
+        const results = byId("taskResults");
+        if (!results) return;
+        const update = () => {
+          const tasks = applyFilters(taskPage(activePage));
+          results.innerHTML = activePage === "tasks" || activePage === "upcoming" ? taskView(tasks) : taskTable(tasks);
+        };
+        ["filterStatus","filterPriority","filterProject","sortTasks"].forEach(id => byId(id)?.addEventListener("change", update));
+      };
+      const setPage = page => {
+        activePage = page;
+        byId("sidebar").classList.remove("open");
+        byId("overlay").classList.remove("open");
+        currentSearch = byId("globalSearch").value.trim();
+        render();
+        window.scrollTo({top:0,behavior:"smooth"});
+      };
+      const openModal = html => {
+        byId("modalBackdrop").innerHTML = `<div class="modal" role="dialog" aria-modal="true">${html}</div>`;
+        byId("modalBackdrop").classList.add("open");
+        activeModal = true;
+        window.setTimeout(() => byId("modalBackdrop").querySelector("input,button,textarea,select")?.focus(), 0);
+      };
+      const closeModal = () => {
+        byId("modalBackdrop").classList.remove("open");
+        byId("modalBackdrop").innerHTML = "";
+        activeModal = false;
+      };
+      const localDateTimeValue = value => {
+        if (!value) return "";
+        const date = new Date(value);
+        const pad = number => String(number).padStart(2,"0");
+        return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+      };
+      const taskForm = (task = null, project = "") => {
+        const isEdit = Boolean(task);
+        const projectValue = task?.project || project;
+        openModal(`<div class="modal-head"><div class="modal-head-copy"><div class="eyebrow">${isEdit ? "Make an update" : "Make it happen"}</div><h2>${isEdit ? "Edit task" : "Create a task"}</h2><p>Keep it clear, give it a priority, and pick a next step.</p></div><button class="modal-close" type="button" data-close-modal aria-label="Close">×</button></div>
+          <form id="taskForm" data-task-id="${escapeHtml(task?.id || "")}"><div class="form-grid">
+            <div class="field wide"><label for="taskTitle">Task name *</label><input id="taskTitle" name="title" required maxlength="120" placeholder="What needs to get done?" value="${escapeHtml(task?.title || "")}"></div>
+            <div class="field wide"><label for="taskDescription">Description</label><textarea id="taskDescription" name="description" maxlength="1000" placeholder="Add a few helpful details...">${escapeHtml(task?.description || "")}</textarea></div>
+            <div class="field"><label for="taskDue">Deadline</label><input id="taskDue" name="due" type="date" value="${escapeHtml(task?.due || "")}"></div>
+            <div class="field"><label for="taskReminder">Reminder (local demo only)</label><input id="taskReminder" name="reminder" type="datetime-local" value="${escapeHtml(localDateTimeValue(task?.reminder || ""))}"></div>
+            <div class="field"><label for="taskPriority">Priority</label><select id="taskPriority" name="priority">${["low","medium","high","urgent"].map(p=>`<option value="${p}" ${(task?.priority || "medium") === p ? "selected" : ""}>${priorityLabel(p)}</option>`).join("")}</select></div>
+            <div class="field"><label for="taskStatus">Status</label><select id="taskStatus" name="status">${["todo","inprogress","review","completed"].map(s=>`<option value="${s}" ${(task?.status || "todo") === s ? "selected" : ""}>${statusLabel(s)}</option>`).join("")}</select></div>
+            <div class="field"><label for="taskProject">Project</label><select id="taskProject" name="project"><option value="">Personal</option>${state.projects.map(p=>`<option value="${escapeHtml(p.name)}" ${projectValue === p.name ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}</select></div>
+            <div class="field"><label for="taskTags">Tags</label><input id="taskTags" name="tags" maxlength="120" placeholder="design, launch" value="${escapeHtml((task?.tags || []).join(", "))}"><span class="field-hint">Separate tags with commas.</span></div>
+          </div><div class="modal-actions"><button class="btn" type="button" data-close-modal>Cancel</button><button class="btn btn-primary" type="submit">${isEdit ? "Save changes" : "Add task"}</button></div></form>`);
+      };
+      const taskDetail = id => {
+        const task = state.tasks.find(item => item.id === id);
+        if (!task) return;
+        openModal(`<div class="modal-head"><div class="modal-head-copy"><div class="eyebrow">${escapeHtml(task.project || "Personal")}</div><h2>${escapeHtml(task.title)}</h2><p>Created ${new Date(task.created).toLocaleDateString("en",{month:"long",day:"numeric"})}</p></div><button class="modal-close" type="button" data-close-modal aria-label="Close">×</button></div>
+          <div class="detail-meta"><span class="status-pill ${escapeHtml(task.status)}">${statusLabel(task.status)}</span><span class="tag"><span class="priority-dot ${escapeHtml(task.priority)}"></span>${priorityLabel(task.priority)} priority</span><span class="tag">${formatDate(task.due)}</span>${(task.tags || []).map(tag=>`<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div><p class="detail-description">${escapeHtml(task.description || "No description added.")}</p>${task.reminder ? `<p class="page-subtitle">Local reminder set for ${escapeHtml(new Date(task.reminder).toLocaleString())}.</p>` : ""}<div class="modal-actions"><button class="btn btn-danger btn-small" type="button" data-delete="${escapeHtml(task.id)}">Move to trash</button><button class="btn btn-primary" type="button" data-edit="${escapeHtml(task.id)}">${icon("edit")} Edit task</button></div>`);
+      };
+      const makeNotification = (title, body, category = "Task update") => {
+        const preference = category === "Task deadline" ? "deadlines" : category === "Project update" ? "projectUpdates" : category === "Security" ? "securityAlerts" : "taskUpdates";
+        if (state.preferences[preference] === false) return;
+        state.notifications.unshift({ id:uid(),title,body,time:Date.now(),read:false,category });
+      };
+      const softDelete = id => {
+        const index = state.tasks.findIndex(task => task.id === id);
+        if (index < 0) return;
+        const [task] = state.tasks.splice(index,1);
+        state.trashed.unshift(task);
+        save(); closeModal(); render(); toast("Task moved to trash.");
+      };
+      const exportData = () => {
+        try {
+          const blob = new Blob([JSON.stringify({ exportedAt:new Date().toISOString(), demo:true, tasks:state.tasks, projects:state.projects, notes:state.notes },null,2)],{type:"application/json"});
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement("a");
+          anchor.href = url; anchor.download = "nova-tasks-demo-export.json"; anchor.click();
+          URL.revokeObjectURL(url);
+          toast("Workspace export downloaded.");
+        } catch (error) { console.error("Could not export the demo workspace.", error); toast("Export failed. Please try again.",true); }
+      };
+      const newNote = () => {
+        const note = { id:uid(),title:"Untitled note",body:"",updated:Date.now() };
+        state.notes.unshift(note); activeNoteId = note.id; save(); render();
+        byId("noteTitle")?.focus();
+      };
+      const updateNote = () => {
+        const note = state.notes.find(item=>item.id===activeNoteId);
+        if (!note) return;
+        note.title = byId("noteTitle")?.value.trim() || "Untitled note";
+        note.body = byId("noteBody")?.value || "";
+        note.updated = Date.now();
+        save();
+        const status = byId("noteSaveStatus");
+        if (status) status.textContent = "Saved just now";
+        window.clearTimeout(noteSaveTimer);
+        noteSaveTimer = window.setTimeout(() => {
+          if (byId("noteSaveStatus")) byId("noteSaveStatus").textContent = "Saved in this browser";
+        },1300);
+        const current = document.activeElement?.id;
+        if (current === "noteTitle") {
+          const active = byId("pageContent").querySelector(".note-item.selected strong");
+          if (active) active.textContent = note.title;
+        }
+      };
+      document.addEventListener("click", event => {
+        const target = event.target.closest("button,[data-detail],[data-project],[data-note]");
+        if (!target) {
+          if (event.target === byId("modalBackdrop")) closeModal();
+          return;
+        }
+        if (target.dataset.nav) { setPage(target.dataset.nav); return; }
+        if (target.dataset.action === "new-task") { taskForm(null,target.dataset.taskProject || ""); return; }
+        if (target.dataset.action === "new-project") { projectsForm(); return; }
+        if (target.dataset.action === "new-note") { newNote(); return; }
+        if (target.dataset.action === "read-all") { state.notifications.forEach(item=>item.read=true); save(); render(); toast("All notifications marked as read."); return; }
+        if (target.dataset.action === "export") { exportData(); return; }
+        if (target.dataset.action === "reset") {
+          if (window.confirm("Reset this browser's NOVA demo workspace to the original sample data? This cannot be undone.")) {
+            state = demoState(); activeNoteId = state.notes[0]?.id || null; currentSearch=""; byId("globalSearch").value=""; save(); render(); toast("Demo workspace reset.");
+          }
+          return;
+        }
+        if (target.dataset.action === "signout") { toast("This is a local demo; no account is signed in."); return; }
+        if (target.dataset.nav === "help") { setPage("help"); return; }
+        if (target.hasAttribute("data-close-modal")) { closeModal(); return; }
+        if (target.dataset.view) { state.view = target.dataset.view; save(); render(); return; }
+        if (target.dataset.detail) { taskDetail(target.dataset.detail); return; }
+        if (target.dataset.edit) {
+          const task = state.tasks.find(item=>item.id===target.dataset.edit);
+          if (task) taskForm(task);
+          return;
+        }
+        if (target.dataset.delete) {
+          const task = state.tasks.find(item=>item.id===target.dataset.delete);
+          if (task && window.confirm(`Move "${task.title}" to trash? You can restore it later.`)) softDelete(task.id);
+          return;
+        }
+        if (target.dataset.projectEdit) { projectsForm(target.dataset.projectEdit); return; }
+        if (target.dataset.project) { projectDetail(target.dataset.project); return; }
+        if (target.dataset.note) { activeNoteId=target.dataset.note; render(); return; }
+        if (target.dataset.read) { const item=state.notifications.find(n=>n.id===target.dataset.read); if(item){item.read=true;save();render();} return; }
+        if (target.dataset.notificationDelete) { state.notifications=state.notifications.filter(n=>n.id!==target.dataset.notificationDelete);save();render();toast("Notification deleted.");return; }
+        if (target.dataset.restore) { const index=state.trashed.findIndex(item=>item.id===target.dataset.restore);if(index>=0){const [task]=state.trashed.splice(index,1);state.tasks.unshift(task);save();render();toast("Task restored.");}return; }
+        if (target.dataset.deletePermanent) { const task=state.trashed.find(item=>item.id===target.dataset.deletePermanent);if(task&&window.confirm(`Permanently delete "${task.title}" from this browser?`)){state.trashed=state.trashed.filter(item=>item.id!==task.id);save();render();toast("Task permanently deleted.");}return; }
+        if (target.dataset.format) {
+          const textarea=byId("noteBody");
+          if (!textarea) return;
+          const additions={heading:"## ",bold:"**text**",italic:"*text*",bullet:"- ",check:"- [ ] ",link:"[link text](https://)"};
+          const start=textarea.selectionStart,end=textarea.selectionEnd;
+          const insertion=additions[target.dataset.format];
+          textarea.setRangeText(insertion,start,end,"end");textarea.focus();textarea.dispatchEvent(new Event("input",{bubbles:true}));
+          return;
+        }
+      });
+      document.addEventListener("change", event => {
+        const target=event.target;
+        if (target.matches("[data-complete]")) {
+          const task=state.tasks.find(item=>item.id===target.dataset.complete);
+          if(task){task.status=target.checked?"completed":"todo";if(target.checked)task.completedAt=Date.now();else delete task.completedAt;makeNotification(target.checked?"Task completed":"Task reopened",task.title);save();render();toast(target.checked?"Task marked complete.":"Task moved back to To do.");}
+        }
+        if(target.id==="themeSwitch") { state.theme=target.checked?"light":"dark";save();render(); }
+        if(target.dataset.preference) {state.preferences[target.dataset.preference]=target.checked;save();toast("Preference saved.");}
+      });
+      document.addEventListener("input", event => {
+        const target=event.target;
+        if(target.id==="globalSearch"){currentSearch=target.value.trim();if(["tasks","today","upcoming","completed","inbox","calendar"].includes(activePage))render();return;}
+        if(target.id==="noteTitle"||target.id==="noteBody"){updateNote();return;}
+        if(target.id==="quickNote"){state.quickNote=target.value;save();byId("quickNoteStatus").textContent="Saved just now";return;}
+      });
+      document.addEventListener("submit", event => {
+        if(event.target.id==="taskForm"){
+          event.preventDefault();
+          if(event.target.dataset.submitting==="true")return;
+          const form=event.target;form.dataset.submitting="true";
+          const data=new FormData(form);
+          const title=String(data.get("title")||"").trim();
+          if(!title){form.dataset.submitting="false";byId("taskTitle").focus();toast("Add a task name before saving.",true);return;}
+          const id=form.dataset.taskId;
+          const existing=state.tasks.find(task=>task.id===id);
+          const status=String(data.get("status"));
+          const task={...(existing||{id:uid(),created:Date.now()}),title,description:String(data.get("description")||"").trim(),due:String(data.get("due")||""),reminder:String(data.get("reminder")||""),priority:String(data.get("priority")),status,project:String(data.get("project")||""),tags:String(data.get("tags")||"").split(",").map(tag=>tag.trim()).filter(Boolean).slice(0,10)};
+          if(status==="completed"&&!task.completedAt)task.completedAt=Date.now();
+          if(status!=="completed")delete task.completedAt;
+          if(existing)state.tasks=state.tasks.map(item=>item.id===id?task:item);else state.tasks.unshift(task);
+          makeNotification(existing?"Task updated":"Task created",task.title);
+          save();closeModal();render();toast(existing?"Task updated.":"Task added.");
+        }
+        if(event.target.id==="projectForm"){
+          event.preventDefault();
+          const form=event.target;const data=new FormData(form);const oldName=form.dataset.oldName;
+          const name=String(data.get("name")||"").trim();
+          if(!name){byId("projectName").focus();return;}
+          if(state.projects.some(item=>item.name.toLowerCase()===name.toLowerCase()&&item.name!==oldName)){toast("A project with that name already exists.",true);return;}
+          const project={name,description:String(data.get("description")||"").trim(),color:String(data.get("color")||"#c7a66a"),deadline:String(data.get("deadline")||"")};
+          if(oldName){state.projects=state.projects.map(item=>item.name===oldName?project:item);state.tasks.forEach(task=>{if(task.project===oldName)task.project=name;});}
+          else state.projects.push(project);
+          save();closeModal();render();toast(oldName?"Project updated.":"Project created.");
+        }
+        if(event.target.id==="profileForm"){
+          event.preventDefault();
+          const name=String(new FormData(event.target).get("name")||"").trim();
+          if(!name){byId("profileName").focus();return;}
+          state.userName=name;save();render();toast("Demo profile updated.");
+        }
+      });
+      document.addEventListener("keydown", event => {
+        if(event.key==="Escape"&&activeModal)closeModal();
+        if(event.key==="/"&&!["INPUT","TEXTAREA"].includes(document.activeElement.tagName)&&!activeModal){event.preventDefault();byId("globalSearch").focus();}
+        if((event.key==="Enter"||event.key===" ")&&event.target.matches("[data-detail],[data-project]")){event.preventDefault();event.target.click();}
+      });
+      byId("themeToggle").addEventListener("click",()=>{state.theme=state.theme==="dark"?"light":"dark";save();render();});
+      byId("menuToggle").addEventListener("click",()=>{byId("sidebar").classList.add("open");byId("overlay").classList.add("open");});
+      byId("overlay").addEventListener("click",()=>{byId("sidebar").classList.remove("open");byId("overlay").classList.remove("open");});
+      byId("workspaceButton").addEventListener("click",()=>toast("You're viewing your personal demo workspace."));
+      let quickNoteTimer;
+      document.addEventListener("input",event=>{
+        if(event.target.id==="quickNote"){
+          window.clearTimeout(quickNoteTimer);
+          quickNoteTimer=window.setTimeout(()=>{save();const status=byId("quickNoteStatus");if(status)status.textContent="Saved in this browser";},300);
+        }
+      });
+      byId("pageContent").addEventListener("dragstart",event=>{
+        const card=event.target.closest("[data-drag]");
+        if(card){event.dataTransfer.setData("text/plain",card.dataset.drag);event.dataTransfer.effectAllowed="move";}
+      });
+      byId("pageContent").addEventListener("dragover",event=>{
+        const column=event.target.closest("[data-drop]");
+        if(column){event.preventDefault();column.classList.add("drag-over");}
+      });
+      byId("pageContent").addEventListener("dragleave",event=>event.target.closest("[data-drop]")?.classList.remove("drag-over"));
+      byId("pageContent").addEventListener("drop",event=>{
+        const column=event.target.closest("[data-drop]");
+        if(!column)return;
+        event.preventDefault();column.classList.remove("drag-over");
+        const task=state.tasks.find(item=>item.id===event.dataTransfer.getData("text/plain"));
+        if(task){task.status=column.dataset.drop;if(task.status==="completed")task.completedAt=Date.now();else delete task.completedAt;save();render();toast(`Task moved to ${statusLabel(task.status)}.`);}
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>
